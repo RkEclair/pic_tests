@@ -11,14 +11,21 @@ void __ISR(_TIMER_1_VECTOR, IPL3SOFT) Timer1Handler() {
     ++count_100ms;
 }
 
+unsigned char reset = 0;
+
+void __ISR(_EXTERNAL_2_VECTOR, IPL3SOFT) INT2Handler() {
+    IFS0bits.INT2IF = 0;
+    reset = 1;
+}
+
 void _mon_putc(char x) {
-    while(!U1STAbits.TRMT);
+    while (!U1STAbits.TRMT);
     U1TXREG = x;
 }
 
 int main() {
     ANSELA = ANSELB = 0;
-    TRISA = 0;
+    TRISA = 0b100;
     TRISB = 0b100;
     LATA = LATB = 0;
 
@@ -28,6 +35,10 @@ int main() {
     U1STAbits.UTXEN = 1;
     U1MODEbits.BRGH = 1;
     U1MODEbits.ON = 1;
+
+    INT2R = 0;
+    IEC0bits.INT2IE = 1;
+    IPC2bits.INT2IP = 3;
 
     PR1 = 12499;
     T1CONbits.TCKPS = 1;
@@ -40,7 +51,11 @@ int main() {
 
     unsigned char count = 0, i = 10;
     while (1) {
-        while(count_100ms != 10); count_100ms = 0;
+        while (count_100ms != 10)
+            if (reset)
+                count = reset = 0;
+
+        count_100ms = 0;
         printf("%2d %#02x\r\n", count, count);
         ++count;
     }

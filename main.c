@@ -18,6 +18,13 @@ void __ISR(_EXTERNAL_2_VECTOR, IPL3SOFT) INT2Handler() {
     reset = 1;
 }
 
+unsigned char key = 0;
+
+void __ISR(_UART_1_VECTOR, IPL3SOFT) UART1Handler() {
+    while (U1STAbits.URXDA) key = U1RXREG;
+    IFS1bits.U1RXIF = 0;
+}
+
 void _mon_putc(char x) {
     while (!U1STAbits.TRMT);
     U1TXREG = x;
@@ -40,6 +47,9 @@ int main() {
     IEC0bits.INT2IE = 1;
     IPC2bits.INT2IP = 3;
 
+    IPC8bits.U1IP = 3;
+    IEC1bits.U1RXIE = 1;
+
     PR1 = 12499;
     T1CONbits.TCKPS = 1;
     T1CONbits.ON = 1;
@@ -49,14 +59,24 @@ int main() {
     INTCONbits.MVEC = 1;
     __builtin_enable_interrupts();
 
-    unsigned char count = 0, i = 10;
+    unsigned char count = 0, i = 10, amount = 1;
     while (1) {
-        while (count_100ms != 10)
-            if (reset)
+        while (count_100ms != 10) {
+            if (reset) {
                 count = reset = 0;
+                printf("RESET\r\n");
+            }
+            if (key == 'd' || key == 'D') {
+                amount = -1;
+                printf("Counting down");
+            } else if (key == 'u' || key == 'U') {
+                amount = 1;
+                printf("Counting up");
+            }
+        }
 
         count_100ms = 0;
         printf("%2d %#02x\r\n", count, count);
-        ++count;
+        count += amount;
     }
 }

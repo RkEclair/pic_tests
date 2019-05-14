@@ -35,17 +35,19 @@ inline void setPR1(unsigned long us) {
 }
 
 int main() {
-    ANSELA = 0;
-		ANSELB = 0;
-    TRISA = 0;
+    ANSELA = ANSELB = 0;
+    TRISA = 0b1000;
     TRISB = 0b100;
     LATA = LATB = 0;
-    
-    setPR1(920);
+
+    setPR1(1000);
 
     while (1) {
-        while(!IFS0bits.T1IF);
+        while (!IFS0bits.T1IF);
         IFS0bits.T1IF = 0;
-        LATAbits.LATA2 ^= 1;
+        LATBbits.LATB4 = 1;
+        delay_ms(PORTAbits.RA3 ? 1 : 2);
+        LATBbits.LATB4 = 0;
+        delay_ms(15 - 1);
     }
 }

@@ -34,9 +34,9 @@ inline void setPR2(unsigned long us)
 	char pace = 0;
 	for (; pace < 7; ++pace) {
 		if (us < test) break;
-		us /= 2;
-		test *= 2;
+		test <<= 1;
 	}
+	us >>= pace;
 	PR2 = us * 40 - 1;
 	T2CONbits.TCKPS = pace;
 	T2CONbits.ON = 1;

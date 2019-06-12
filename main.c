@@ -32,9 +32,12 @@ inline void setPR2(unsigned long us)
 {
 	long test = 1638;
 	char pace = 0;
-	for (; pace < 7; ++pace) {
+	for (; pace < 6; ++pace) {
 		if (us < test) break;
 		test <<= 1;
+	}
+	if (7 <= pace && us < 256) {
+		pace += 2;
 	}
 	us >>= pace;
 	PR2 = us * 40 - 1;
@@ -47,28 +50,21 @@ inline void setPR2(unsigned long us)
 int main()
 {
 	ANSELA = ANSELB = 0;
-	TRISA = 0b1000;
-	TRISB = 0b100;
+	TRISA = 0b1000; // RA3 is input
+	TRISB = 0b100; // RB2 is input
 	LATA = LATB = 0;
 
-	setPR1(1000);
-	unsigned count = 0, count2 = 0;
-	char width = 1;
+	RPB4R = 5; // use PB4 as output of OC1
+
+	setPR2(15000);
+	
+	short short_width = 2000 / 4 * 5 - 1;
+	short long_width = 4000 / 4 * 5 - 1;
+	OC1R = OC1RS = short_width;
+	OC1CONbits.OCM = 6;
+	OC1CONbits.ON = 1;
+	
 	while (1) {
-		if (15 - count == 0) {
-			LATBbits.LATB4 = 1;
-			count = 0;
-		}
-		if (3000 <= count2) {
-			width = (width - 1 ? 1 : 2);
-			count2 = 0;
-		}
-		if (width - count == 0) {
-			LATBbits.LATB4 = 0;
-		}
-		while (!IFS0bits.T1IF);
-		IFS0bits.T1IF = 0;
-		++count;
-		++count2;
+		OC1RS = (PORTAbits.RA3 ? short_width : long_width);
 	}
 }

@@ -54,17 +54,25 @@ int main()
 	TRISB = 0b100; // RB2 is input
 	LATA = LATB = 0;
 
-	RPB4R = 5; // use PB4 as output of OC1
+	/**
+	 * |Ocx|     pins     |value to set|
+	 * |---|--------------|------------|
+	 * |  1|A0,B4,B7,B15  |5           |
+	 * |  2|A1,B5,B8,B11  |5           |
+	 * |  3|A3,B9,B10,B14 |5           |
+	 * |4/5|A2,B6,B13     |5/6         |
+   */
+	RPB5R = 5; // use RB5 as output of OC2
 
 	setPR2(15000);
 	
 	short short_width = 2000 / 4 * 5 - 1;
 	short long_width = 4000 / 4 * 5 - 1;
-	OC1R = OC1RS = short_width;
-	OC1CONbits.OCM = 6;
-	OC1CONbits.ON = 1;
+	OC2R = OC1RS = short_width;
+	OC2CONbits.OCM = 6;
+	OC2CONbits.ON = 1;
 	
 	while (1) {
-		OC1RS = (PORTAbits.RA3 ? short_width : long_width);
+		OC2RS = (PORTAbits.RA3 ? short_width : long_width);
 	}
 }
